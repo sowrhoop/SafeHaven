@@ -1,0 +1,22 @@
+*.iml
+.gradle
+local.properties
+.idea
+.DS_Store
+build
+captures
+.externalNativeBuild
+.cxx
+app/build
+app/release
+app/debug
+.androidide
+*.jks
+*.keystore
+app/*.jks
+app/*.keystore
+# Ignore local Gradle wrapper and helper scripts — builds are CI-only
+gradlew
+gradlew.bat
+gradle/wrapper/
+build.sh

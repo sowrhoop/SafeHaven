@@ -1,0 +1,106 @@
+name: Production Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version Name (e.g. 3.0)'
+        required: true
+        default: '3.0'
+      version_code:
+        description: 'Version Code (Must be integer, e.g. 15)'
+        required: true
+        default: '15'
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    name: Build & Publish Secure Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Determine Versioning Metrics
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            RAW_NAME="${{ github.event.inputs.version_name }}"
+            V_CODE="${{ github.event.inputs.version_code }}"
+          else
+            RAW_NAME="${{ github.ref_name }}"
+            V_CODE="${{ github.run_number }}"
+          fi
+          
+          V_NAME="${RAW_NAME#v}"
+          V_NAME="${V_NAME#V}"
+          
+          echo "VERSION_NAME=$V_NAME" >> $GITHUB_ENV
+          echo "VERSION_CODE=$V_CODE" >> $GITHUB_ENV
+          echo "TAG_NAME=v$V_NAME" >> $GITHUB_ENV
+          
+          echo "Building Version Name: $V_NAME (Code: $V_CODE)"
+
+      - name: Locate Project and Decode Keystore
+        run: |
+          APP_DIR=$(find . -type d -name "app" -print -quit)
+          echo "APP_PATH=$APP_DIR" >> $GITHUB_ENV
+          echo "ROOT_PATH=$(dirname $APP_DIR)" >> $GITHUB_ENV
+          
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode - > "$APP_DIR/safehaven-release-key.keystore"
+
+      - name: Build Secure Production APK
+        env:
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SAFEHAVEN_WHITELIST: ${{ secrets.APP_WHITELIST }}
+          SAFEHAVEN_BATTERY_FLAGS: ${{ secrets.BATTERY_FLAGS }}
+          SAFEHAVEN_DNS: ${{ secrets.DNS_SPECIFIER }}
+        run: |
+          cd ${{ env.ROOT_PATH }}
+          AUTH_KEY_PATH=$(realpath app/safehaven-release-key.keystore)
+
+          gradle assembleRelease \
+            --no-build-cache \
+            --no-configuration-cache \
+            -PAppVersionCode="${{ env.VERSION_CODE }}" \
+            -PAppVersionName="${{ env.VERSION_NAME }}" \
+            -PStoreFile="$AUTH_KEY_PATH" \
+            -PSafeHavenStorePassword="$STORE_PASSWORD" \
+            -PSafeHavenKeyPassword="$KEY_PASSWORD" \
+            -PSafeHavenKeyAlias="$KEY_ALIAS"
+
+      - name: Secure & Rename Artifact
+        run: |
+          APK_PATH=$(find . -name "app-release.apk" -print -quit)
+          mv "$APK_PATH" "Safehaven-${{ env.TAG_NAME }}-Production.apk"
+          
+          rm -rf app/build/outputs/apk/
+
+      - name: Publish to Private Vault Repository
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: sowrhoop/Private-Vault
+          tag_name: ${{ env.TAG_NAME }}
+          name: SafeHaven ${{ env.TAG_NAME }}
+          files: Safehaven-${{ env.TAG_NAME }}-Production.apk
+          generate_release_notes: false
+          body: "🔒 Secure automated binary drop for SafeHaven ${{ env.TAG_NAME }}."
+          token: ${{ secrets.VAULT_PAT }}
