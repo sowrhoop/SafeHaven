@@ -30,10 +30,12 @@ android {
 
         // --- OPEN SOURCE PRIVACY INJECTION ---
         val userWhitelist = System.getenv("SAFEHAVEN_WHITELIST") ?: (project.findProperty("SafeHavenWhitelist") as? String) ?: "app.anonymous.safehaven,com.android.settings"
+        val urlBlocklist = System.getenv("SAFEHAVEN_URL_BLOCKLIST") ?: (project.findProperty("SafeHavenUrlBlocklist") as? String) ?: ""
         val userBatteryFlags = System.getenv("SAFEHAVEN_BATTERY_FLAGS") ?: (project.findProperty("SafeHavenBatteryFlags") as? String) ?: "advertise_is_enabled=true"
         val userDns = System.getenv("SAFEHAVEN_DNS") ?: (project.findProperty("SafeHavenDns") as? String) ?: "dns.google"
 
         buildConfigField("String", "APP_WHITELIST", "\"$userWhitelist\"")
+        buildConfigField("String", "URL_BLOCKLIST", "\"$urlBlocklist\"")
         buildConfigField("String", "BATTERY_SAVER_FLAGS", "\"$userBatteryFlags\"")
         buildConfigField("String", "PRIVATE_DNS", "\"$userDns\"")
     }
