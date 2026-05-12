@@ -241,4 +241,3 @@ suspend fun enforceStrictWhitelist(context: Context) = withContext(Dispatchers.I
         Privilege.lockdownActive.value = false
     }
 }
-}
