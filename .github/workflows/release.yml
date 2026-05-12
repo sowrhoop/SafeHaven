@@ -71,6 +71,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           SAFEHAVEN_WHITELIST: ${{ secrets.APP_WHITELIST }}
+          SAFEHAVEN_URL_BLOCKLIST: ${{ secrets.URL_BLOCKLIST }}
           SAFEHAVEN_BATTERY_FLAGS: ${{ secrets.BATTERY_FLAGS }}
           SAFEHAVEN_DNS: ${{ secrets.DNS_SPECIFIER }}
         run: |
