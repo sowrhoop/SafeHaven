@@ -154,6 +154,20 @@ private fun applyChromiumPolicies() {
         putBoolean("DisableScreenshots", true) // Prevents other apps from scraping the browser screen
         putBoolean("MetricsReportingEnabled", false)
         putBoolean("UrlKeyedAnonymizedDataCollectionEnabled", false)
+
+        // --- 5. NATIVE URL BLOCKLIST (Site-level Dopamine Detox) ---
+        val blocklistRaw = BuildConfig.URL_BLOCKLIST
+        if (blocklistRaw.isNotBlank()) {
+            val blocklistArray = blocklistRaw.split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toTypedArray()
+            
+            if (blocklistArray.isNotEmpty()) {
+                putStringArray("URLBlocklist", blocklistArray)
+                Log.d("ChromiumPolicies", "Injected ${blocklistArray.size} domain blocks into Chromium networking stack.")
+            }
+        }
     }
     
     arrayOf("com.android.chrome", "com.brave.browser").forEach { pkg ->
@@ -226,4 +240,5 @@ suspend fun enforceStrictWhitelist(context: Context) = withContext(Dispatchers.I
     } finally {
         Privilege.lockdownActive.value = false
     }
+}
 }
