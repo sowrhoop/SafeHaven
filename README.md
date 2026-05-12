@@ -16,7 +16,8 @@ SafeHaven was built to act as an external pre-frontal cortex for intense academi
 ## ⚡ Core Features
 * **Zero-Latency App Suspension:** Instantly blocks and greys-out any non-whitelisted application. Protects the default system launcher dynamically to prevent UI bricking.
 * **Dopamine Detox UI:** Continuously enforces System Grayscale, 0x Window/Transition Animations, and a forced Night Light schedule to make the device unappealing for endless scrolling.
-* **Network Vault:** Hardcodes the global device Private DNS (e.g., Mullvad) and injects DNS-over-HTTPS (DoH) templates directly into Chromium-based browsers via Application Restrictions.
+* **Network Vault:** Hardcodes the global device Private DNS and injects DNS-over-HTTPS (DoH) templates directly into Chromium-based browsers via Application Restrictions.
+* **Kernel-Level URL Blocking:** Injects Chromium's native URLBlocklist policy to instantly block distracting sites at the networking stack layer without needing battery-draining Accessibility services.
 * **Ghost Traps (Anti-Bypass):** Utilizes `ContentObserver` to monitor the Android Settings database. If a user attempts to tap the Build Number 7 times to unlock Developer Options, SafeHaven overwrites the database in microseconds, keeping ADB and Dev Options permanently disabled.
 * **Terminal Lockdown:** Leverages native Device Owner privileges to disable Safe Boot, Factory Resets, User Switching, and OS-level application control (Clear Data/Force Stop) on the daemon itself.
 
@@ -32,9 +33,10 @@ NOTE: This repository is configured for CI-only builds. The Gradle wrapper and l
 1. Fork this repository.
 2. Go to your repository **Settings** -> **Secrets and variables** -> **Actions**.
 3. Add the following **Repository Secrets**:
-   * `APP_WHITELIST`: Comma-separated package names (e.g., `app.anonymous.safehaven,com.aurora.store,com.whatsapp`). No spaces.
+   * `APP_WHITELIST`: Comma-separated package names (e.g., `app.anonymous.safehaven,com.android.vending,com.android.phone`). No spaces.
+   * `URL_BLOCKLIST`: Comma-separated domains to block via browser policies (e.g., youtube.com,www.telegram.org,instagram.com). No spaces.
    * `BATTERY_FLAGS`: Your specific Android battery saver constants.
-   * `DNS_SPECIFIER`: Your secure DNS (e.g., `all.dns.mullvad.net`).
+   * `DNS_SPECIFIER`: Your secure DNS (e.g., `dns.quad9.net`).
    * `KEYSTORE_BASE64`: A base64 encoded PKCS12 `.keystore` file.
    * `KEY_ALIAS`, `KEY_PASSWORD`, `KEYSTORE_PASSWORD`: Your signing credentials.
 4. Run the **Production Release** GitHub Action. Download the generated APK to your host machine.
